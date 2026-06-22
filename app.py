@@ -27,7 +27,7 @@ def migrate_passwords():
     users = db.fetchall()
     
     for user_id, plain_password in users:
-        # Skip if already hashed (bcrypt hashes start with $2b$)
+ 
         if not plain_password.startswith('$2b$'):
             hashed = hash_password(plain_password)
             db.execute("UPDATE users SET password = ? WHERE id = ?", (hashed, user_id))
@@ -42,7 +42,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ------------------- Session State Initialization - MUST BE EARLY -------------------
+ Session State Initialization 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user = None
@@ -51,7 +51,7 @@ if "current_page" not in st.session_state:
 if "active_work_date" not in st.session_state:
     st.session_state.active_work_date = date.today()
 
-# Import styles and components with proper error handling
+# Import styles 
 try:
     from styles import MAIN_STYLES, COLORS
     from components import sidebar_header, navigation_menu
@@ -62,7 +62,7 @@ except ImportError as e:
     MAIN_STYLES = ""
     COLORS = {}
     
-    # Define fallback functions
+    #  fallback functions
     def sidebar_header(user):
         """Fallback sidebar header"""
         st.markdown(f"""
@@ -83,7 +83,7 @@ except ImportError as e:
         else:
             return {"Dashboard": "📊", "Materiāli": "📦", "Stundas": "⏱️", "Transports": "🚗"}
 
-# Apply MAIN_STYLES if available
+# Apply MAIN_STYLES 
 if HAS_CUSTOM_STYLES and MAIN_STYLES:
     st.markdown(MAIN_STYLES, unsafe_allow_html=True)
 
@@ -91,9 +91,9 @@ if HAS_CUSTOM_STYLES and MAIN_STYLES:
 DAY_RATE = 10.0
 NIGHT_RATE = 15.0
 
-# ------------------- Database Connection -------------------
+#  Database Connection 
 try:
-    # Create database directory if it doesn't exist
+    # Create database directory 
     os.makedirs("database", exist_ok=True)
     conn = sqlite3.connect("database/materials.db", check_same_thread=False)
     db = conn.cursor()
@@ -101,7 +101,7 @@ except sqlite3.Error as e:
     st.error(f"Database connection error: {e}")
     st.stop()
 
-# ------------------- PDF Generation -------------------
+# PDF Generation 
 def generate_invoice_pdf(invoice_id, user_id, project_id, start_date, end_date, filename="rekins.pdf"):
     """
     Ģenerē PDF rēķinu un atgriež faila nosaukumu
@@ -112,31 +112,31 @@ def generate_invoice_pdf(invoice_id, user_id, project_id, start_date, end_date, 
         print(f"Periods: {start_date} - {end_date}")
         print(f"Faila nosaukums: {filename}")
         
-        # Pārbaudām vai varam rakstīt failu
+    
         current_dir = os.getcwd()
         print(f"Pašreizējā direktorija: {current_dir}")
         
-        # Izveidojam PDF
+
         c = canvas.Canvas(filename, pagesize=A4)
         
-        # Mēģinām uzstādīt fontu ar garumzīmju atbalstu
+      
         font_loaded = False
         try:
-            # Pārbaudām vai DejaVuSans.ttf eksistē
+       
             if os.path.exists('DejaVuSans.ttf'):
                 pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
                 c.setFont("DejaVuSans", 11)
                 print("✓ DejaVuSans fonts ielādēts (atbalsta garumzīmes)")
                 font_loaded = True
             else:
-                # Mēģinām ar Helvetica (neatbalsta garumzīmes)
+  
                 c.setFont("Helvetica", 11)
                 print("⚠ DejaVuSans.ttf nav atrasts, izmantoju Helvetica (bez garumzīmēm)")
         except Exception as font_error:
             print(f"Fonta kļūda: {font_error}")
             c.setFont("Helvetica", 11)
         
-        # PDF saturs
+        # PDF 
         y = 800
         c.drawString(50, y, "RĒĶINS")
         y -= 20
@@ -147,7 +147,7 @@ def generate_invoice_pdf(invoice_id, user_id, project_id, start_date, end_date, 
         c.line(50, y, 550, y)
         y -= 30
         
-        # Materiāli
+        # Materials
         c.drawString(50, y, "Materiāli:")
         y -= 20
         
@@ -173,7 +173,7 @@ def generate_invoice_pdf(invoice_id, user_id, project_id, start_date, end_date, 
             c.drawString(60, y, "Nav materiālu")
             y -= 15
         
-        # Darba stundas
+        # work hours
         y -= 10
         c.drawString(50, y, "Darba stundas:")
         y -= 20
@@ -196,7 +196,7 @@ def generate_invoice_pdf(invoice_id, user_id, project_id, start_date, end_date, 
             c.drawString(60, y, "Nav stundu")
         y -= 15
         
-        # Transports
+        # Transport
         y -= 10
         c.drawString(50, y, "Transports:")
         y -= 20
@@ -219,18 +219,18 @@ def generate_invoice_pdf(invoice_id, user_id, project_id, start_date, end_date, 
             c.drawString(60, y, "Nav transporta")
         y -= 15
         
-        # Kopā
+        #together
         total = mat_total + hours_cost + transport_cost
         y -= 20
         c.line(50, y, 550, y)
         y -= 20
         c.drawString(50, y, f"KOPĀ: {total:.2f} €")
         
-        # Saglabājam PDF
+        # Save PDF
         c.save()
         print(f"✓ PDF saglabāts: {filename}")
         
-        # Pārbaudām vai fails eksistē
+        
         if os.path.exists(filename):
             file_size = os.path.getsize(filename)
             print(f"✓ Fails eksistē, izmērs: {file_size} baiti")
@@ -245,7 +245,7 @@ def generate_invoice_pdf(invoice_id, user_id, project_id, start_date, end_date, 
         traceback.print_exc()
         return None
 
-# ------------------- Database Initialization -------------------
+# Database Initialization 
 def init_db():
     # Users
     db.execute("""
@@ -378,7 +378,7 @@ def init_db():
 # Initialize database
 init_db()
 
-# ------------------- DASHBOARD FUNCTIONS -------------------
+#  DASHBOARD FUNCTIONS\
 def worker_dashboard(user):
     st.markdown('<h1 class="gradient-header">📊 Worker Dashboard</h1>', unsafe_allow_html=True)
 
@@ -442,7 +442,7 @@ def worker_dashboard(user):
 def manager_dashboard(user):
     st.markdown('<h1 class="gradient-header">📊 Manager Dashboard</h1>', unsafe_allow_html=True)
 
-    # Esošās metrikas - ātrs pārskats
+    
     db.execute("SELECT COUNT(*) FROM projects")
     active_projects = db.fetchone()[0]
 
@@ -462,10 +462,10 @@ def manager_dashboard(user):
 
     st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
 
-    # TIKAI IZMAKSU SADAĻA - pārējās noņemtas
+    
     st.subheader("💰 Izmaksu sadalījums pa projektiem (šomēnes)")
     
-    # Iegūstam datus
+    # get data
     db.execute("""
         SELECT p.name,
                (SELECT SUM(um.quantity * m.price) 
@@ -488,7 +488,7 @@ def manager_dashboard(user):
     data = db.fetchall()
     
     if data:
-        # Sagatavojam datus
+        
         projects = []
         materials = []
         hours = []
@@ -507,10 +507,10 @@ def manager_dashboard(user):
             "Transports": transports
         })
         
-        # Rādām grafiku
+
         st.bar_chart(df.set_index("Projekts"))
         
-        # Kopsavilkums zem grafika
+    
         total_materials = sum(materials)
         total_hours = sum(hours)
         total_transport = sum(transports)
@@ -523,7 +523,7 @@ def manager_dashboard(user):
         - Transports: {total_transport:.2f} €
         """)
         
-        # Parādām arī tabulu ar detalizētu informāciju
+        
         with st.expander("📋 Detalizēts izmaksu sadalījums"):
             detailed_df = pd.DataFrame({
                 "Projekts": projects,
@@ -536,7 +536,7 @@ def manager_dashboard(user):
     else:
         st.info("Nav datu šim mēnesim")
         
-        # Ja nav datu, parādām paziņojumu
+        
         with st.expander("ℹ️ Kāpēc nav datu?"):
             st.markdown("""
             Iespējamie iemesli:
@@ -551,7 +551,7 @@ def manager_dashboard(user):
 def admin_dashboard():
     st.markdown('<h1 class="gradient-header">📊 Admin Dashboard</h1>', unsafe_allow_html=True)
 
-    # Esošās metrikas - tās paliek, jo sniedz ātru pārskatu
+   
     db.execute("SELECT COUNT(*) FROM users")
     total_users = db.fetchone()[0]
 
@@ -571,7 +571,7 @@ def admin_dashboard():
 
     st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
 
-    # TIKAI AKTĪVIE LIETOTĀJI - pārējos noņemam
+
     st.subheader("👥 Aktīvie lietotāji pēdējos 6 mēnešos")
     
     db.execute("""
@@ -588,7 +588,7 @@ def admin_dashboard():
         df = pd.DataFrame(data, columns=["Mēnesis", "Aktīvie lietotāji"])
         st.bar_chart(df.set_index("Mēnesis"))
         
-        # Vienkārša statistika
+        
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Vidēji mēnesī", f"{sum([d[1] for d in data])/len(data):.0f}")
@@ -600,7 +600,7 @@ def admin_dashboard():
         st.info("Nav datu par aktivitāti")
     
 
-# ------------------- UI FUNCTIONS -------------------
+# UI FUNCTIONS
 def add_material_ui(user, project_id):
     st.markdown("### 📦 Materiāli")
     db.execute("SELECT id, name, unit, price FROM materials")
@@ -644,9 +644,9 @@ def add_transport_ui(user, project_id):
         conn.commit()
         st.success("Transporta ieraksts pievienots!")
 
-# ------------------- LOGIN SECTION -------------------
+#LOGIN SECTION 
 if not st.session_state.logged_in:
-    # Pievienojam konteineru ar klasēm
+    # 
     st.markdown("""
     <div class="login-container">
         <div class="login-card">
@@ -656,12 +656,12 @@ if not st.session_state.logged_in:
             <div class="subtitle">Lūdzu, pieslēdzieties sistēmai</div>
     """, unsafe_allow_html=True)
     
-    # Streamlit elementi
+    # Streamlit elements 
     username = st.text_input("Lietotājvārds", placeholder="Ievadiet lietotājvārdu", key="login_username")
     password = st.text_input("Parole", type="password", placeholder="Ievadiet paroli", key="login_password")
     
     if st.button("Pieslēgties", key="login_button", width='stretch'):
-        # Get user by username only (don't check password in SQL)
+   
         db.execute("SELECT id, username, password, role FROM users WHERE username=?", (username,))
         user = db.fetchone()
         
@@ -672,7 +672,7 @@ if not st.session_state.logged_in:
         else:
             st.error("Nepareizs lietotājvārds vai parole")
     
-    # Noslēdzam HTML
+
     st.markdown("""
             <div class="login-footer">
                 © 2026 Projekta Sistēma
@@ -683,13 +683,13 @@ if not st.session_state.logged_in:
     
     st.stop()
 
-# ------------------- MAIN APP SECTION -------------------
+#MAIN APP SECTION 
 else:
     user = st.session_state.user
     
     # Sidebar
     with st.sidebar:
-        # Use the imported sidebar_header function
+        
         sidebar_header(user)
         
         # Get navigation menu
@@ -697,7 +697,7 @@ else:
         
         st.markdown('<hr style="border-color: #374151;">', unsafe_allow_html=True)
         
-        # Handle both dictionary and list returns from navigation_menu
+     
         if isinstance(menu_items, dict):
             for label, icon in menu_items.items():
                 if st.button(
@@ -730,7 +730,7 @@ else:
         elif st.session_state.current_page == "Lietotāji":
             st.subheader("👤 Lietotāju pārvaldība")
             
-            # FILTRI
+            # FILTers
             with st.expander("🔍 Filtrēt lietotājus", expanded=False):
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -759,7 +759,7 @@ else:
 
             st.markdown("### 📋 Esošie lietotāji")
             
-            # Izgūstam lietotājus ar filtriem
+           
             query = "SELECT id, username, role FROM users WHERE 1=1"
             params = []
             
@@ -778,18 +778,17 @@ else:
             db.execute(query, params)
             users = db.fetchall()
             
-            # Rādām atrasto skaitu
+    
             st.caption(f"Atrasti {len(users)} lietotāji")
 
             for u in users:
                 with st.container():
-                    # Izveidojam kolonnas lietotāja rindai
+                
                     col1, col2, col3, col4, col5 = st.columns([1, 2, 2, 1, 1])
                     
                     col1.write(f"**ID:** {u[0]}")
                     col2.write(f"**Lietotājs:** {u[1]}")
                     
-                    # Lomas maiņas selectbox
                     new_role = col3.selectbox(
                         "Loma",
                         ["admin", "manager", "worker"],
@@ -798,37 +797,30 @@ else:
                         label_visibility="collapsed"
                     )
 
-                    # Saglabāšanas poga
                     if col4.button("💾", key=f"save_{u[0]}", help="Saglabāt izmaiņas"):
                         db.execute("UPDATE users SET role=? WHERE id=?", (new_role, u[0]))
                         conn.commit()
                         st.success("Loma atjaunināta!")
                         st.rerun()
                     
-                    # Dzēšanas poga (ar apstiprinājumu)
                     if col5.button("🗑️", key=f"delete_{u[0]}", help="Dzēst lietotāju"):
-                        # Pievienojam apstiprinājuma dialogu
                         if u[1] == "admin" and u[0] == 1:
                             st.error("Nevar dzēst galveno administratoru!")
                         else:
                             st.session_state[f"confirm_delete_user_{u[0]}"] = True
                     
-                    # Ja ir aktivizēts dzēšanas apstiprinājums
                     if st.session_state.get(f"confirm_delete_user_{u[0]}", False):
                         st.warning(f"Vai tiešām vēlaties dzēst lietotāju '{u[1]}'?")
                         col_yes, col_no = st.columns(2)
                         with col_yes:
                             if st.button("Jā, dzēst", key=f"confirm_yes_{u[0]}"):
                                 try:
-                                    # Pārbaudām vai lietotājs nav piesaistīts projektiem
                                     db.execute("SELECT COUNT(*) FROM user_projects WHERE user_id=?", (u[0],))
                                     project_count = db.fetchone()[0]
                                     
                                     if project_count > 0:
-                                        # Ja ir piesaistīts projektiem, vispirms noņemam piesaistes
                                         db.execute("DELETE FROM user_projects WHERE user_id=?", (u[0],))
                                     
-                                    # Dzēšam lietotāju
                                     db.execute("DELETE FROM users WHERE id=?", (u[0],))
                                     conn.commit()
                                     st.success(f"Lietotājs '{u[1]}' dzēsts!")
@@ -848,7 +840,6 @@ else:
         elif st.session_state.current_page == "Projekti":
             st.subheader("🏗 Projektu pārvaldība")
             
-            # FILTRI
             with st.expander("🔍 Filtrēt projektus", expanded=False):
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -875,7 +866,6 @@ else:
 
             st.markdown("### 📋 Esošie projekti")
             
-            # Izgūstam projektus ar filtriem
             query = "SELECT id, name, client_name, address FROM projects WHERE 1=1"
             params = []
             
@@ -894,27 +884,22 @@ else:
             db.execute(query, params)
             projects = db.fetchall()
             
-            # Rādām atrasto skaitu
             st.caption(f"Atrasti {len(projects)} projekti")
 
             for p in projects:
                 with st.container():
-                    # Izveidojam kolonnas projekta rindai
                     col1, col2, col3, col4 = st.columns([1, 3, 3, 1])
                     
                     col1.write(f"**ID:** {p[0]}")
                     col2.write(f"**Nosaukums:** {p[1]}")
                     col3.write(f"**Klients:** {p[2]}")
                     
-                    # Dzēšanas poga (ar apstiprinājumu)
                     if col4.button("🗑️", key=f"delete_project_{p[0]}", help="Dzēst projektu"):
                         st.session_state[f"confirm_delete_project_{p[0]}"] = True
                     
-                    # Ja ir aktivizēts dzēšanas apstiprinājums
                     if st.session_state.get(f"confirm_delete_project_{p[0]}", False):
                         st.warning(f"Vai tiešām vēlaties dzēst projektu '{p[1]}'?")
                         
-                        # Pārbaudām vai projektam ir piesaistīti dati
                         db.execute("SELECT COUNT(*) FROM user_projects WHERE project_id=?", (p[0],))
                         user_count = db.fetchone()[0]
                         
@@ -949,7 +934,6 @@ else:
                         with col_yes:
                             if st.button("Jā, dzēst visu", key=f"confirm_yes_project_{p[0]}"):
                                 try:
-                                    # Dzēšam visus saistītos datus
                                     db.execute("DELETE FROM user_projects WHERE project_id=?", (p[0],))
                                     db.execute("DELETE FROM usage_materials WHERE project_id=?", (p[0],))
                                     db.execute("DELETE FROM work_hours WHERE project_id=?", (p[0],))
@@ -1009,13 +993,11 @@ else:
         elif st.session_state.current_page == "Rēķini":
             st.subheader("📄 Rēķini")
             
-            # Izveidojam tabulas rēķinu vēsturei un jaunam rēķinam
             tab1, tab2 = st.tabs(["📋 Rēķinu vēsture", "➕ Jauns rēķins"])
             
             with tab1:
                 st.markdown("### 📋 Iepriekšējie rēķini")
                 
-                # FILTRI rēķinu vēsturei
                 with st.expander("🔍 Filtrēt rēķinus", expanded=False):
                     col1, col2, col3 = st.columns(3)
                     with col1:
@@ -1023,14 +1005,12 @@ else:
                     with col2:
                         filter_date_to = st.date_input("Līdz", value=None, key="filter_date_to")
                     with col3:
-                        # Iegūstam lietotāju sarakstu
                         db.execute("SELECT DISTINCT u.username FROM users u JOIN user_projects up ON u.id = up.user_id WHERE up.project_id IN (SELECT project_id FROM user_projects WHERE user_id = ?)", (user[0],))
                         user_list = [u[0] for u in db.fetchall()]
                         filter_inv_user = st.selectbox("Lietotājs", ["Visi"] + user_list, key="filter_inv_user")
                     
                     col4, col5, col6 = st.columns(3)
                     with col4:
-                        # Iegūstam projektu sarakstu
                         db.execute("SELECT p.id, p.name FROM projects p JOIN user_projects up ON p.id = up.project_id WHERE up.user_id = ?", (user[0],))
                         project_list = [p[1] for p in db.fetchall()]
                         filter_inv_project = st.selectbox("Projekts", ["Visi"] + project_list, key="filter_inv_project")
@@ -1039,7 +1019,6 @@ else:
                     with col6:
                         filter_min_amount = st.number_input("Summa (€)", min_value=0.0, step=100.0, key="filter_min")
                 
-                # Izgūstam rēķinus no datubāzes ar filtriem
                 query = """
                     SELECT i.id, i.created_at, u.username, p.name, 
                            (SELECT SUM(um.quantity * m.price) 
@@ -1062,7 +1041,6 @@ else:
                 """
                 params = [DAY_RATE, NIGHT_RATE, user[0]]
                 
-                # Pievienojam filtrus
                 if filter_date_from:
                     query += " AND date(i.created_at) >= ?"
                     params.append(filter_date_from)
@@ -1085,14 +1063,12 @@ else:
                 invoices = db.fetchall()
                 
                 if invoices:
-                    # Parādām rēķinus tabulā
                     invoice_data = []
                     filtered_invoices = []
                     
                     for inv in invoices:
                         total = (inv[4] or 0) + (inv[5] or 0) + (inv[6] or 0)
                         
-                        # Pievienojam summas filtru
                         if filter_min_amount and total < filter_min_amount:
                             continue
                             
@@ -1109,7 +1085,6 @@ else:
                     df = pd.DataFrame(invoice_data)
                     st.dataframe(df, use_container_width=True)
                     
-                    # Rēķina detalizācija
                     if filtered_invoices:
                         st.markdown("### 📄 Rēķina detalizācija")
                         selected_invoice = st.selectbox(
@@ -1121,7 +1096,6 @@ else:
                         if selected_invoice:
                             inv_id = int(selected_invoice.split(" - ")[0])
                             
-                            # Iegūstam detalizētu informāciju
                             db.execute("""
                                 SELECT u.username, p.name, i.created_at
                                 FROM invoices i
@@ -1139,7 +1113,6 @@ else:
                                 **Projekts:** {inv_details[1]}  
                                 """)
                                 
-                                # Materiāli
                                 st.markdown("#### 📦 Materiāli")
                                 db.execute("""
                                     SELECT m.name, SUM(um.quantity), m.price
@@ -1161,7 +1134,7 @@ else:
                 else:
                     st.info("Nav izveidotu rēķinu")
                     
-            #------------rekina generesana
+            # invoice generation
             
             with tab2:
                 st.markdown("### ➕ Rēķina ģenerēšana")
@@ -1192,7 +1165,6 @@ else:
                 users = db.fetchall()
 
                 if users:
-                    # Vairāku lietotāju atlase
                     user_options = [u[1] for u in users]
                     selected_users = st.multiselect(
                         "Izvēlies lietotāju(s) (var izvēlēties vairākus)", 
@@ -1207,12 +1179,9 @@ else:
                     with col2:
                         end_date = st.date_input("Beigu datums", date.today())
 
-                    # IEGŪSTAM DATUS VISIEM ATLASĪTAJIEM LIETOTĀJIEM
                     if selected_users:
-                        # Konvertējam izvēlētos lietotājus uz ID
                         selected_user_ids = [u[0] for u in users if u[1] in selected_users]
                         
-                        # Materiāli visiem atlasītajiem lietotājiem
                         placeholders = ','.join('?' * len(selected_user_ids))
                         db.execute(f"""
                             SELECT m.name, SUM(um.quantity), m.price
@@ -1225,7 +1194,6 @@ else:
                         """, selected_user_ids + [project_id, start_date, end_date])
                         materials_data = db.fetchall()
                         
-                        # Stundas visiem atlasītajiem lietotājiem
                         db.execute(f"""
                             SELECT SUM(hours_day), SUM(hours_night)
                             FROM work_hours
@@ -1237,7 +1205,6 @@ else:
                         day_hours = day_hours or 0
                         night_hours = night_hours or 0
 
-                        # Transports visiem atlasītajiem lietotājiem
                         db.execute(f"""
                             SELECT SUM(liters), AVG(price_per_liter)
                             FROM transport_usage
@@ -1294,12 +1261,9 @@ else:
                         # PDF EXPORT BUTTON
                         if st.button("📥 Eksportēt PDF", key="export_pdf", width='stretch'):
                             try:
-                                # Pārbaudām vai ir dati
                                 if not materials_data and day_hours == 0 and night_hours == 0 and not liters:
                                     st.warning("Nav datu eksportēšanai!")
                                 else:
-                                    # Saglabājam rēķinu datubāzē - katram lietotājam atsevišķi vai kopā?
-                                    # Šeit saglabājam kā kopīgu rēķinu (ar pirmā lietotāja ID)
                                     db.execute(
                                         "INSERT INTO invoices (user_id, project_id, created_at) VALUES (?,?,?)",
                                         (selected_user_ids[0], project_id, date.today().isoformat())
@@ -1307,12 +1271,11 @@ else:
                                     conn.commit()
                                     invoice_id = db.lastrowid
                                     
-                                    # Ģenerējam PDF ar pilnu saturu
                                     filename = f"rekins_{invoice_id}.pdf"
                                     
                                     result = generate_invoice_pdf(
                                         invoice_id,
-                                        selected_user_ids[0],  # izmanto pirmo lietotāju kā reprezentantu
+                                        selected_user_ids[0],  
                                         project_id,
                                         start_date,
                                         end_date,
@@ -1341,7 +1304,7 @@ else:
                 else:
                     st.info("Šim projektam nav piesaistītu lietotāju")
 
-    elif user[3] == "worker":  # <-- ŠEIT PAREIZI - VIENĀ LĪMENĪ AR elif user[3] == "manager"
+    elif user[3] == "worker":  
         # Worker section
         if "active_work_date" not in st.session_state:
             st.session_state.active_work_date = date.today()
@@ -1372,7 +1335,6 @@ else:
         if st.session_state.current_page == "Dashboard":
             st.markdown('<h1 class="gradient-header">📊 Worker Dashboard</h1>', unsafe_allow_html=True)
 
-            # Iegūstam datus visiem projektiem
             total_hours_week = 0
             total_hours_month = 0
             total_materials_week = 0
@@ -1380,7 +1342,6 @@ else:
             active_project = projects[0][1] if projects else "Nav"
 
             for p_id, p_name in projects:
-                # Šonedēļ stundas
                 db.execute("""
                     SELECT SUM(hours_day + hours_night)
                     FROM work_hours
@@ -1390,7 +1351,6 @@ else:
                 week_hours = db.fetchone()[0] or 0
                 total_hours_week += week_hours
 
-                # Šomēnes stundas
                 db.execute("""
                     SELECT SUM(hours_day + hours_night)
                     FROM work_hours
@@ -1400,7 +1360,6 @@ else:
                 month_hours = db.fetchone()[0] or 0
                 total_hours_month += month_hours
                 
-                # Šonedēļ materiāli
                 db.execute("""
                     SELECT SUM(quantity)
                     FROM usage_materials
@@ -1410,7 +1369,6 @@ else:
                 week_materials = db.fetchone()[0] or 0
                 total_materials_week += week_materials
                 
-                # Šomēnes materiāli
                 db.execute("""
                     SELECT SUM(quantity)
                     FROM usage_materials
@@ -1420,7 +1378,6 @@ else:
                 month_materials = db.fetchone()[0] or 0
                 total_materials_month += month_materials
 
-            # Metrikas
             col1, col2, col3, col4 = st.columns(4)
             with col1:
                 st.metric("Stundas šonedēļ", total_hours_week)
@@ -1433,11 +1390,9 @@ else:
 
             st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
 
-            # Izveidojam vairākas cilnes
             tab1, tab2, tab3 = st.tabs(["📊 Stundu grafiks", "📦 Mani materiāli", "⏱ Manas stundas"])
             
             with tab1:
-                # Stundu grafiks pa dienām
                 db.execute("""
                     SELECT strftime('%w', date) AS diena, SUM(hours_day + hours_night)
                     FROM work_hours
@@ -1459,7 +1414,6 @@ else:
             with tab2:
                 st.markdown("### 📦 Manu materiālu vēsture")
                 
-                # FILTRI materiālu vēsturei
                 with st.expander("🔍 Filtrēt materiālus", expanded=False):
                     col1, col2, col3 = st.columns(3)
                     with col1:
@@ -1477,7 +1431,6 @@ else:
                     with col6:
                         filter_max_qty = st.number_input("Max. daudzums", min_value=0.0, step=1.0, key="worker_max_qty")
                 
-                # Izgūstam materiālu datus ar filtriem
                 query = """
                     SELECT um.date, p.name, m.name, um.quantity, m.unit, m.price, (um.quantity * m.price) as total_cost
                     FROM usage_materials um
@@ -1507,7 +1460,6 @@ else:
                 material_data = db.fetchall()
                 
                 if material_data:
-                    # Pielietojam daudzuma filtrus
                     filtered_data = []
                     for m in material_data:
                         if filter_min_qty and m[3] < filter_min_qty:
@@ -1529,10 +1481,8 @@ else:
                         df = pd.DataFrame(filtered_data)
                         st.dataframe(df, use_container_width=True)
                         
-                        # Statistika
                         st.markdown("### 📊 Materiālu statistika")
                         
-                        # Kopējā materiālu vērtība
                         total_value = sum(float(m["Kopā"].replace(" €", "")) for m in filtered_data)
                         
                         col1, col2, col3 = st.columns(3)
@@ -1541,11 +1491,9 @@ else:
                         with col2:
                             st.metric("Kopējā materiālu vērtība", f"{total_value:.2f} €")
                         with col3:
-                            # Vidējā vērtība uz ierakstu
                             avg_value = total_value / len(filtered_data) if filtered_data else 0
                             st.metric("Vidējā vērtība", f"{avg_value:.2f} €")
                         
-                        # Diagramma pa materiālu veidiem
                         st.markdown("#### Materiālu sadalījums pēc daudzuma")
                         material_summary = {}
                         for m in filtered_data:
@@ -1567,7 +1515,6 @@ else:
                 else:
                     st.info("Jums vēl nav pievienotu materiālu")
                     
-                    # Parādām parauga informāciju
                     with st.expander("ℹ️ Kā pievienot materiālus?"):
                         st.markdown("""
                         Lai pievienotu materiālus:
@@ -1583,7 +1530,6 @@ else:
             with tab3:
                 st.markdown("### ⏱ Manu stundu vēsture")
                 
-                # FILTRI stundu vēsturei
                 with st.expander("🔍 Filtrēt stundas", expanded=False):
                     col1, col2, col3 = st.columns(3)
                     with col1:
@@ -1593,7 +1539,6 @@ else:
                     with col3:
                         filter_hours_project = st.selectbox("Projekts", ["Visi"] + [p[1] for p in projects], key="worker_hours_project")
                 
-                # Izgūstam stundu datus ar filtriem
                 query = """
                     SELECT wh.date, p.name, wh.hours_day, wh.hours_night, 
                            (wh.hours_day + wh.hours_night) as total_hours,
@@ -1636,7 +1581,6 @@ else:
                     df = pd.DataFrame(hours_list)
                     st.dataframe(df, use_container_width=True)
                     
-                    # Statistika
                     total_hours = sum(h[4] for h in hours_data)
                     total_cost = sum(h[5] for h in hours_data)
                     total_day = sum(h[2] for h in hours_data)
