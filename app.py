@@ -110,19 +110,14 @@ def generate_invoice_pdf(invoice_id, user_id, project_id, start_date, end_date, 
         print("\n=== SĀK PDF ĢENERĀCIJU ===")
         print(f"Parametri: invoice_id={invoice_id}, user_id={user_id}, project_id={project_id}")
         print(f"Periods: {start_date} - {end_date}")
-        print(f"Faila nosaukums: {filename}")
-        
-    
+        print(f"Faila nosaukums: {filename}")   
         current_dir = os.getcwd()
         print(f"Pašreizējā direktorija: {current_dir}")
-        
-
         c = canvas.Canvas(filename, pagesize=A4)
         
       
         font_loaded = False
         try:
-       
             if os.path.exists('DejaVuSans.ttf'):
                 pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
                 c.setFont("DejaVuSans", 11)
@@ -378,7 +373,7 @@ def init_db():
 # Initialize database
 init_db()
 
-#  DASHBOARD FUNCTIONS\
+#  DASHBOARD FUNCTIONS
 def worker_dashboard(user):
     st.markdown('<h1 class="gradient-header">📊 Worker Dashboard</h1>', unsafe_allow_html=True)
 
